@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real time chat box</title>
+    <link rel="shortcut icon" href="https://cdn.discordapp.com/attachments/885089951207804949/1112741854258139268/logo.png" type="image/x-icon">
+    <title>Join chat room | TIGET</title>
     <style>
         *{
             margin: 0;
@@ -19,130 +20,100 @@
             max-width: 920px;
             margin: 0 auto;
             padding: 20px;
+            margin-top: 100px;
+            
+            
         }
-        .chat-box{
-            background-color: #000000;
-            color:#c09e6b;
+        form{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #3a3a3a;
             border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            padding: 1.3rem;
         }
-        .chat-header{
-            padding: 10px 20px;
-            border-bottom: 1px solid #131313;
-        }
-        .chat-header h1{
+        form label{
             font-size: 20px;
             font-weight: 600;
+            margin-bottom: 10px;
+            color: #c09e6b;
         }
-        .chat-display{
-            height: 400px;
-            overflow-y: scroll;
-            padding: 10px 20px;
-        }
-        .chat-display::-webkit-scrollbar{
-            width: 5px;
-        }
-        .chat-display::-webkit-scrollbar-thumb{
-            background-color: #131313;
-            border-radius: 5px;
-        }
-        .chat-display::-webkit-scrollbar-track{
-            background-color: #333333;
-        }
-        .chat-left{
-            display: flex;
-            background-color: #333333;
-            padding: 10px;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .chat-right{
-            display: flex;
-            background-color: #202020;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-        .chat-message{
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-        }
-        .chat-sender{
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .chat-msg{
-            font-size: 14px;
-            font-weight: 400;
-        }
-        .chat-input{
-            padding: 10px 20px;
-            border-top: 1px solid #131313;
-        }
-        .chat-input form{
-            display: flex;
-            align-items: center;
-        }
-        .chat-input form input[type="text"]{
+        form input{
             width: 100%;
+            max-width: 400px;
             padding: 10px;
+            border-radius: 5px;
             border: 1px solid #131313;
-            border-radius: 5px;
-            outline: none;
+            margin-bottom: 20px;
         }
-        .chat-input form button{
-            padding: 10px;
-            border: none;
+        form button{
+            padding: 10px 20px;
             border-radius: 5px;
-            outline: none;
-            cursor: pointer;
+            border: 1px solid #131313;
             background-color: #131313;
             color: #c09e6b;
-            font-size: 14px;
+            font-size: 20px;
             font-weight: 600;
+            cursor: pointer;
         }
-        .chat-input form button:hover{
+        form button:hover{
             background-color: #c09e6b;
-            color: #c09e6b;
-        }
-        .auto-scroll{
-            scroll-behavior: smooth;
+            color: #131313;
         }
 
     </style>
+
 </head>
 <body>
     <div class="container">
-        <div>
-            <form action="/chatroom" id="chatroom">
-                <label for="username">Username</label><br>
-                <input type="text" name="username" id="username"><br>
-                <label for="roomcode">Room code</label><br>
-                <input type="text" name="roomcode" id="roomcode"><br>
-                <!-- join or create new room -->
-                <button type="submit" id="join">Join</button>
-                <button type="submit" id="create">Create new room</button>
-            </form>
-        </div>
+        <form id="joinorcreate" method="get" action="/chatroom">
+            <label for="username">Display name</label>
+            <input type="text" name="username" id="username" placeholder="Enter your display name" required>
+            <label for="roomcode">Room id</label>
+            <input type="text" name="roomcode" id="roomcode" placeholder="Enter room id, Empty this to create new room">
+            <button type="submit" id="joincreatebutt">Create</button>
+        </form>
+        
     </div>
 
     <!-- import socket io -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    
     <script>
-        const chatroom = document.getElementById('chatroom');
-        const username = document.getElementById('username');
-        const roomcode = document.getElementById('roomcode');
-        const join = document.getElementById('join');
-        const create = document.getElementById('create');
+        /* server side code
+        io.on("connection", (socket) => {
+    
+    socket.on("join-room", ({roomId, username}) => {
+        if(roomId == null || roomId == undefined || roomId == ""){
+            roomId = Math.floor(Math.random() * 1000000);
+        }
+        socket.join(roomId);
+        socket.to(roomId).emit("user-connected", username);
+        socket.on("message", (data) => {
+            io.to(roomId).emit("message", {
+                sender: data.sender,
+                message: data.message
+            });
+        }
+        );
+    }
+    );
 
-        // create socket
-        const socket = io('http://localhost:8000',{
+    socket.on("disconnect", () => {
+        socket.broadcast.emit("user-disconnected");
+    }
+    );
+}
+);
+ */
+
+    (function Socket() {
+        const socket = io("http://localhost:8080",{
     cors: {
-      origins: ["http://localhost:8000"]
+        origins: ["*","http://localhost:8080", "https://tiget-roomchat.onrender.com/"]
     },
-      handlePreflightRequest: (req, res) => {
+    handlePreflightRequest: (req, res) => {
         const headers = {
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
             "Access-Control-Allow-Origin": "*", //or the specific origin you want to give access to,
@@ -151,31 +122,54 @@
         res.writeHead(200, headers);
         res.end();
     }
-  });
+    });
 
-        // join room
-        join.addEventListener('click', (e) => {
+    const joinorcreate = document.getElementById("joinorcreate");
+    const username = document.getElementById("username");
+    const roomcode = document.getElementById("roomcode");
+    const joincreatebutt = document.getElementById("joincreatebutt");
+    if(username.value == null || username.value == undefined || username.value == ""){
+        username.value = "Anonymous#"+ Math.floor(Math.random() * 1000000) ;
+    }
+    roomcode.addEventListener("keyup", (e) => {
+        if(e.keyCode === 13){
             e.preventDefault();
-            socket.emit('join-room', {username: username.value, roomcode: roomcode.value});
-        });
+            joincreatebutt.click();
+        }
 
-        // create new room
-        create.addEventListener('click', (e) => {
+        if(roomcode.value == null || roomcode.value == undefined || roomcode.value == ""){
+            joincreatebutt.innerText = "Create";
+        }else{
+            joincreatebutt.innerText = "Join";
+        }
+    });
+
+    roomcode.addEventListener("keydown", (e) => {
+        if(e.keyCode === 13){
             e.preventDefault();
-            socket.emit('create-room', {username: username.value, roomId: roomcode.value});
-        });
+        }
 
-        // listen for join room
-        socket.on('user-connected', ({username, roomcode}) => {
-            window.location.href = `/chatroom?username=${username}&roomcode=${roomcode}`;
-        });
-
-        // listen for create room
-        socket.on('createRoom', ({username, roomcode}) => {
-            console.log(`${username} created room ${roomcode}`);
-        });
+        if(roomcode.value == null || roomcode.value == undefined || roomcode.value == ""){
+            joincreatebutt.innerText = "Create";
+        }else{
+            joincreatebutt.innerText = "Join";
+        }
+    });
 
 
+
+    joinorcreate.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if(username.value == null || username.value == undefined || username.value == ""){
+        username.value = "Anonymous#"+ Math.floor(Math.random() * 1000000) ;
+        }
+        if(roomcode.value == null || roomcode.value == undefined || roomcode.value == ""){
+            roomcode.value = 'new_room';
+        }
+        joinorcreate.submit();
+    });
+
+    })()
 
     </script>
 </body>
