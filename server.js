@@ -60,7 +60,7 @@ let activeUsers = [];
 
 const io = require("socket.io")(httpServer, {
     cors: {
-        origins: ["http://localhost:8080","https://tiget-roomchat.onrender.com/","*",]
+        origins: ["*"]
     },
     handlePreflightRequest: (req, res) => {
         const headers = {

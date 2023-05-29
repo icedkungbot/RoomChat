@@ -122,9 +122,9 @@
     (function Socket() {
 
         
-        const socket = io("http://localhost:8080",{
+        const socket = io("https://tiget-roomchat.onrender.com/",{
     cors: {
-        origins: ["*","http://localhost:8080", 'https://tiget-roomchat.onrender.com/']
+        origins: ["*"]
     },
     handlePreflightRequest: (req, res) => {
         const headers = {
