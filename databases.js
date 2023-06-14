@@ -33,7 +33,7 @@ const Chat = {
         try{
             
             const result = await client.db("tiget-chat").collection("chat").insertOne({
-                "_id": parseInt(roomId), 
+                "_id": roomId.toString(), 
                 "messages":[], 
                 "user":[], 
                 "timestamp": Date.now()
@@ -74,14 +74,14 @@ const Chat = {
     join:async (roomId, username) => {
         try{
             
-            let result = await client.db("tiget-chat").collection("chat").findOne({"_id":parseInt(roomId)});
+            let result = await client.db("tiget-chat").collection("chat").findOne({"_id":roomId.toString()});
             if(!result){
                 Chat.create(roomId);
             }else{
                 let chatRoom = client.db("tiget-chat").collection("chat").findOne({"_id:":roomId});
                 console.log("user in room",chatRoom.user)
                 if(!chatRoom.user.includes(username)){
-                    let userJoin = client.db("tiget-chat").collection("chat").updateOne({"_id":parseInt(roomId)},{
+                    let userJoin = client.db("tiget-chat").collection("chat").updateOne({"_id":roomId.toString()},{
                         $push:{
                             "messages": {
                                 "sender":"admin",
@@ -106,11 +106,11 @@ const Chat = {
         }
     },
     leave:async (roomId, username) => {
-        let room = await client.db("tiget-chat").collection("chat").findOne({"_id":parseInt(roomId)});
+        let room = await client.db("tiget-chat").collection("chat").findOne({"_id":roomId.toString()});
         console.log("USER IN ROOM ", room.user)
         let userIsInRoom = room.user.includes(username);
         if(userIsInRoom){
-            const userLeft = client.db("tiget-chat").collection("chat").updateOne({"_id":parseInt(roomId)},{
+            const userLeft = client.db("tiget-chat").collection("chat").updateOne({"_id":roomId.toString()},{
                 $pull:{
                     "user":username
                 },
@@ -128,7 +128,7 @@ const Chat = {
     },
     new:async (roomId, username, msg) => {
         try{
-            let msgPush = await client.db("tiget-chat").collection("chat").updateOne({"_id":parseInt(roomId)},{
+            let msgPush = await client.db("tiget-chat").collection("chat").updateOne({"_id":roomId.toString()},{
                 $push:{
                     "messages": {
                         "sender":username,
@@ -147,7 +147,7 @@ const Chat = {
     load:async (roomId) => {
         try{
             console.log("Chat load call");
-            let chat = await client.db("tiget-chat").collection("chat").findOne({"_id":parseInt(roomId)});
+            let chat = await client.db("tiget-chat").collection("chat").findOne({"_id":roomId.toString()});
             console.log("chat status", chat);
             if(chat == null){
                 return {
