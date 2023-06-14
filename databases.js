@@ -76,7 +76,7 @@ const Chat = {
                     return false;
                 }else{
                     let userJoin = client.db("tiget-chat").collection("chat").updateOne({"_id":roomId},{
-                        "$push":{
+                        $push:{
                             "messages": {
                                 "sender":"admin",
                                 "operation":"join",
@@ -101,10 +101,10 @@ const Chat = {
         let userIsInRoom = room.user.includes(username);
         if(userIsInRoom){
             const userLeft = client.db("tiget-chat").collection("chat").updateOne({"_id":roomId},{
-                "$pull":{
+                $pull:{
                     "user":username
                 },
-                "$push":{
+                $push:{
                     "messages": {
                         "sender":"admin",
                         "operation":"left",
@@ -120,7 +120,7 @@ const Chat = {
         try{
             Chat.connect();
             let msgPush = await client.db("tiget-chat").collection("chat").updateOne({"_id":roomId},{
-                "$push":{
+                $push:{
                     "messages": {
                         "sender":username,
                         "message":msg,
