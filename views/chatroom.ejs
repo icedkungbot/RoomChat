@@ -64,6 +64,13 @@
             flex-direction: column;
             align-items: flex-end;
         }
+        .chat-admin{
+            display: flex;
+            background-color: #333333;
+            flex-direction: column;
+            text-align: center;
+            align-items: center;
+        }
         .chat-message{
             padding: 10px;
             margin: 5px 0;
@@ -233,6 +240,66 @@
     socket.on("connect", () => {
         socket.emit("join-room", {roomId, username});
         document.getElementById('roomid').innerHTML = roomId;
+        socket.emit("load-chat", roomId);
+
+        socket.on("chat-loaded", (data)=> {
+            data.msg.forEach(item => {
+                const msg = JSON.parse(item);
+                if(msg.sender == "admin"){
+                    if(msg.operation == "join"){
+                        chatDisplay.innerHTML += `
+                            <div class="chat-admin">
+                                <div class="chat-message">
+                                    <div class="chat-sender">${username}</div>
+                                    <div class="chat-connect">Connected!</div>
+                                </div>
+                            </div>
+                            `;
+                    }else if(msg.operation == "left"){
+                        chatDisplay.innerHTML += `
+                            <div class="chat-admin">
+                                <div class="chat-message">
+                                    <div class="chat-sender">${username}</div>
+                                    <div class="chat-disconnect">Disconnected!</div>
+                                </div>
+                            </div>
+                            `;
+                    }else{
+                        chatDisplay.innerHTML += `
+                            <div class="chat-admin">
+                                <div class="chat-message">
+                                    <div class="chat-sender">${username}</div>
+                                    <div class="chat-msg">Disconnected!</div>
+                                </div>
+                            </div>
+                            `;
+                    }
+                    
+                }else if(msg.sender == username){
+                    chatDisplay.innerHTML += `
+                <div class="chat-right">
+                    <div class="chat-message">
+                        <div class="chat-sender">${msg.sender}</div>
+                        <div class="chat-msg">${msg.message}</div>
+                    </div>
+                </div>
+                `;
+                }else{
+                    chatDisplay.innerHTML += `
+                <div class="chat-left">
+                    <div class="chat-message">
+                        <div class="chat-sender">${msg.sender}</div>
+                        <div class="chat-msg">${msg.message}</div>
+                    </div>
+                </div>
+                `;
+                }
+                
+            });
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+
+        })
+
         socket.on("message", (data)=>{
             if(data.sender == username){
                 chatDisplay.innerHTML += `
@@ -259,7 +326,7 @@
 
     socket.on("user-connected", (username) => {
         chatDisplay.innerHTML += `
-        <div class="chat-left">
+        <div class="chat-admin">
             <div class="chat-message">
                 <div class="chat-sender">${username}</div>
                 <div class="chat-connect">Connected!</div>
@@ -271,7 +338,7 @@
 
     socket.on("user-disconnected", () => {
         chatDisplay.innerHTML += `
-        <div class="chat-left">
+        <div class="chat-admin">
             <div class="chat-message">
                 <div class="chat-sender">${username}</div>
                 <div class="chat-disconnect">Disconnected!</div>

@@ -6,6 +6,10 @@ const ejs = require("ejs");
 
 const httpServer = require("http").createServer(app);
 
+const { Chat } = require("./databases.js")
+let activeRooms = [];
+let activeUsers = [];
+
 app.use(cors());
 app.set("view engine", "ejs");
 app.set("views", "./views");
@@ -34,6 +38,7 @@ app.get("/chatroom", (req, res) => {
         roomId = Math.floor(Math.random() * 1000000);
         console.log("Room created : ", roomId);
         activeRooms.push(roomId);
+        Chat.create(roomId);
     }
     if(activeUsers.includes({username: username, roomId: roomId})){
         username = username + "#" + Math.floor(Math.random() * 1000);
@@ -53,11 +58,6 @@ httpServer.listen(process.env.PORT || 8080, () => {
     console.log(`Server is running at ${httpServer.address().address}:${httpServer.address().port}`);
 });
 
-
-let activeRooms = [];
-let activeUsers = [];
-
-
 const io = require("socket.io")(httpServer, {
     cors: {
         origins: ["*"]
@@ -74,30 +74,39 @@ const io = require("socket.io")(httpServer, {
 });
 
 io.on("connection", (socket) => {
-
+    Chat.onReady();
     socket.on("join-room", ({roomId, username}) => {
         
             socket.join(roomId);
+            Chat.join(roomId, username)
             socket.to(roomId).emit("user-connected", username);
             socket.emit("check-room", roomId);
             console.log(`User ${username} connected to room ${roomId}`);
             socket.broadcast.emit("admin-console", {socketId: socket.id,socketOn:"join-room", msg: `User ${username} connected to room ${roomId}`});
             socket.on("message", (data) => {
+
             io.to(roomId).emit("message", {
                 sender: data.sender,
                 message: data.message
             });
+            Chat.new(roomId, data.sender, data.message);
         });
         
         
     }
     );
 
+    socket.on("load-chat", async (roomId)=>{
+        const data = await Chat.load(roomId);
+        socket.emit("chat-loaded", data)
+    });
+
     socket.on("leave-room", ({roomId, username}) => {
         console.log(`User ${username} disconnected from room ${roomId}`);
         activeUsers.splice(activeUsers.indexOf({username: username, roomId: roomId}), 1);
         socket.broadcast.emit("admin-console", {socketId: socket.id,socketOn:"leave-room", msg: `User ${username} disconnected from room ${roomId}`});
         socket.leave(roomId);
+        Chat.leave(roomId, username)
         socket.to(roomId).emit("user-disconnected", username);
         socket.emit("check-room", roomId);
     }
@@ -126,5 +135,7 @@ io.on("connection", (socket) => {
         socket.emit("active-rooms", activeRooms);
     }
     );
+
+    
 }
 );
