@@ -215,6 +215,7 @@
         const roomId = '<%=roomId%>';
         
         const socket = io("https://tiget-roomchat.onrender.com/",{
+        //const socket = io("http://localhost:8080/",{
     cors: {
         origins: ["*"]
     },
@@ -243,15 +244,14 @@
         socket.emit("load-chat", roomId);
 
         socket.on("chat-loaded", (data)=> {
-            data.msg.forEach(item => {
-                const msg = JSON.parse(item);
+            data.messages.forEach(item => {
+                const msg = item;
                 if(msg.sender == "admin"){
                     if(msg.operation == "join"){
                         chatDisplay.innerHTML += `
                             <div class="chat-admin">
                                 <div class="chat-message">
-                                    <div class="chat-sender">${username}</div>
-                                    <div class="chat-connect">Connected!</div>
+                                    <div class="chat-connect">${msg.message}</div>
                                 </div>
                             </div>
                             `;
@@ -259,8 +259,7 @@
                         chatDisplay.innerHTML += `
                             <div class="chat-admin">
                                 <div class="chat-message">
-                                    <div class="chat-sender">${username}</div>
-                                    <div class="chat-disconnect">Disconnected!</div>
+                                    <div class="chat-disconnect">${msg.message}</div>
                                 </div>
                             </div>
                             `;
@@ -268,8 +267,7 @@
                         chatDisplay.innerHTML += `
                             <div class="chat-admin">
                                 <div class="chat-message">
-                                    <div class="chat-sender">${username}</div>
-                                    <div class="chat-msg">Disconnected!</div>
+                                    <div class="chat-msg">${msg.message}</div>
                                 </div>
                             </div>
                             `;

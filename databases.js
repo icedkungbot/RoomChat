@@ -3,6 +3,13 @@ const { MongoClient } = require("mongodb");
 const uri = process.env.MONGO_URI || "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
+try{
+    client.connect( () =>{
+        console.log("Connected to MongoDB");
+    })
+}catch(e){
+    console.log(e);
+}
 
 const Chat = {
     onReady:()=>{
@@ -24,9 +31,9 @@ const Chat = {
     },
     create:async (roomId) => {
         try{
-            Chat.connect();
+            
             const result = await client.db("tiget-chat").collection("chat").insertOne({
-                "_id":roomId, 
+                "_id": parseInt(roomId), 
                 "messages":[], 
                 "user":[], 
                 "timestamp": Date.now()
@@ -34,48 +41,47 @@ const Chat = {
         }catch(e){
             console.log(e);
         }finally{
-            Chat.close();
+            console.log("Mongo Action success");
         }
     },
     find:async (roomId) =>{
         try{
-            Chat.connect();
+            
             const result = await client.db("tiget-chat").collection("chat").findOne({"_id:":roomId});
             if(!result){
                 Chat.create(roomId);
             }else{
+                console.log("Chat loaded", roomId)
                 return result;
             }
         }catch(e){
             console.log(e);
         }finally{
-            Chat.close();
+            console.log("Mongo Action success");
         }
     },
     list:async () => {
         try{
-            Chat.connect();
             const rooms = await client.db("tiget-chat").collection("chat").find({}).toArray();
             console.log(`Chat loaded : ${roomId}`)
             return rooms;
         }catch(e){
             console.log(e);
         }finally{
-            Chat.close();
+            console.log("Mongo Action success");
         }
     },
     join:async (roomId, username) => {
         try{
-            Chat.connect();
-            let result = Chat.find(roomId);
+            
+            let result = await client.db("tiget-chat").collection("chat").findOne({"_id":parseInt(roomId)});
             if(!result){
                 Chat.create(roomId);
             }else{
                 let chatRoom = client.db("tiget-chat").collection("chat").findOne({"_id:":roomId});
-                if(chatRoom.user.includes(username)){
-                    return false;
-                }else{
-                    let userJoin = client.db("tiget-chat").collection("chat").updateOne({"_id":roomId},{
+                console.log("user in room",chatRoom.user)
+                if(!chatRoom.user.includes(username)){
+                    let userJoin = client.db("tiget-chat").collection("chat").updateOne({"_id":parseInt(roomId)},{
                         $push:{
                             "messages": {
                                 "sender":"admin",
@@ -88,19 +94,23 @@ const Chat = {
                     });
                     console.log(`${username} Join to ${roomId}`)
                     return true;
+                    
+                }else{
+                    return false;
                 }
             }
         }catch(e){
             console.log(e);
         }finally{
-            Chat.close();
+            console.log("Mongo Action success");
         }
     },
-    left:async (roomId, username) => {
-        let room = Chat.find(roomId);
+    leave:async (roomId, username) => {
+        let room = await client.db("tiget-chat").collection("chat").findOne({"_id":parseInt(roomId)});
+        console.log("USER IN ROOM ", room.user)
         let userIsInRoom = room.user.includes(username);
         if(userIsInRoom){
-            const userLeft = client.db("tiget-chat").collection("chat").updateOne({"_id":roomId},{
+            const userLeft = client.db("tiget-chat").collection("chat").updateOne({"_id":parseInt(roomId)},{
                 $pull:{
                     "user":username
                 },
@@ -118,8 +128,7 @@ const Chat = {
     },
     new:async (roomId, username, msg) => {
         try{
-            Chat.connect();
-            let msgPush = await client.db("tiget-chat").collection("chat").updateOne({"_id":roomId},{
+            let msgPush = await client.db("tiget-chat").collection("chat").updateOne({"_id":parseInt(roomId)},{
                 $push:{
                     "messages": {
                         "sender":username,
@@ -132,17 +141,18 @@ const Chat = {
         }catch(err){
             console.log(err);
         }finally{
-            Chat.close();
+            console.log("Mongo Action success");
         }
     },
     load:async (roomId) => {
         try{
-            Chat.connect();
-            let chat = await client.db("tiget-chat").collection("chat").findOne({"_id":roomId});
-            if(!chat){
+            console.log("Chat load call");
+            let chat = await client.db("tiget-chat").collection("chat").findOne({"_id":parseInt(roomId)});
+            console.log("chat status", chat);
+            if(chat == null){
                 return {
                     id:roomId,
-                    msg:[
+                    messages:[
                         {
                             "sender":"admin",
                             "message":"Welcome to new chat room",
@@ -152,12 +162,13 @@ const Chat = {
                 user:[]
                 };
             }else{
+                console.log("Chat msg =>", chat)
                 return chat;
             }
         }catch(e){
             console.log(e)
         }finally{
-            Chat.close()
+            console.log("Mongo Action success");
         }
     }
 }
